@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+    <title>FLXSTreeGrid demo</title>
+    <script src="./lib/jquery-1.8.2.js"></script>
+    <script src="./lib/jquery-ui-1.9.1.custom.min.js"></script>
+    <script src="./lib/jquery.toaster.js"></script>
+    <script src="./lib_private/minified-compiled-jquery.js"></script>
+    <script src="./lib/config.js"></script>
+
+    <script src="dynamicAddRows.js"></script>
+    <link rel="stylesheet" href="http://www.htmltreegrid.com/demo/flexicious/css/flexicious.css" type="text/css" />
+</head>
+
+<body>
+    <label><input type="checkbox" id="cbFilterRows" value="value">Filter Rows</label>
+    <label><input type="checkbox" id="cbSortRows" value="value">Sort Rows</label>
+    <button onclick="startTimer()" id="btnFetch">Start Fetching data</button>
+
+    <div id="gridContainer" style="width:1200px;height:600px"></div>
+</body>
+
+</html>
