@@ -72,8 +72,19 @@ function startTimer() {
         }
         grid.addRows(generateData(500), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked)
         console.log(grid._dataProvider.length + " records loaded")
-    }, 1000)
+    }, 250)
 }
+/*
+ * Resets form, loads a new first 500 records  */ 
+function simDataSwitch() {
+    document.getElementById("cbFilterRows").disabled = false;
+    document.getElementById("cbSortRows").disabled = false;
+    document.getElementById("btnFetch").disabled = false;
+    document.getElementById("btnFetch").innerHTML = "Start Fetching data";
+    idx=0;
+    grid.setDataProvider(generateData(500));
+}
+
 function generateData(count) {
     var result = [];
     for (var i = 0; i < count; i++) {
@@ -82,6 +93,11 @@ function generateData(count) {
         obj.legalName = "Name " + obj.id;
         obj.line1 = getRandom(100, 999).toString() + " " + streetNames[getRandom(0, streetNames.length - 1)] + " " + streetTypes[getRandom(0, streetTypes.length - 1)];
         obj.line2 = "Suite #" + getRandom(1, 1000);
+
+        // 1 in 750 chance of getting a special record in the line2 field, easy to filter on.
+        if (getRandom(0, 750) == 0) {
+            obj.line2 = 'TEST'
+        }
 
         if (i % 5 == 0) {
             obj.line2 = null;
