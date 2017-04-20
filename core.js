@@ -45,7 +45,7 @@ flexiciousNmsp.FlexDataGrid.prototype.addRows = function (newRows, runFilter, ru
     if (bodyContainer.rows.length == 0) {
         //we havent drawn anything yet.
         bodyContainer.drawRows(true)
-
+        this.checkNoDataMessage();
     } else {
         for (var j = 0; j < bodyContainer.rows.length; j++) {
             var row = bodyContainer.rows[j];
