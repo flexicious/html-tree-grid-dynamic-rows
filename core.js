@@ -21,7 +21,7 @@ flexiciousNmsp.FlexDataGrid.prototype.addRows = function (newRows, runFilter, ru
             }
         }
         if (addToCursor) {
-            if (sortCompareFunction) {
+            if (sortCompareFunction && bodyContainer.itemVerticalPositions.length > 0) {
                 cursorIndex = this.getIndexForElement(bodyContainer.itemVerticalPositions, obj, sortCompareFunction).index;
             }
             var referenceRowPosition = cursorIndex > 0 ? bodyContainer.itemVerticalPositions[cursorIndex - 1] : null;
