@@ -42,17 +42,23 @@ flexiciousNmsp.FlexDataGrid.prototype.addRows = function (newRows, runFilter, ru
             bodyContainer.itemVerticalPositions.splice(cursorIndex, 0, rowPos);//add item at index 0.
         }
     }
+    if (bodyContainer.rows.length == 0) {
+        //we havent drawn anything yet.
+        bodyContainer.drawRows(true)
 
-    for (var j = 0; j < bodyContainer.rows.length; j++) {
-        var row = bodyContainer.rows[j];
-        //now go through all the drawn rows, and update their y property
-        row.setY(row.rowPositionInfo.verticalPosition);
+    } else {
+        for (var j = 0; j < bodyContainer.rows.length; j++) {
+            var row = bodyContainer.rows[j];
+            //now go through all the drawn rows, and update their y property
+            row.setY(row.rowPositionInfo.verticalPosition);
+        }
+
+        bodyContainer.recycle(this.getColumnLevel(), false, this.rowHeight, false);//now make sure the body draws the row
+        bodyContainer.placeComponents();//update the cell positions
+        bodyContainer.invalidateCells();
+        bodyContainer.checkScrollChange()
+        bodyContainer.vMatch.setHeight(bodyContainer._calculatedTotalHeight);
     }
-    bodyContainer.recycle(this.getColumnLevel(), false, this._rowHeight, false);//now make sure the body draws the row
-    bodyContainer.placeComponents();//update the cell positions
-    bodyContainer.invalidateCells();
-    bodyContainer.checkScrollChange()
-    bodyContainer.vMatch.setHeight(bodyContainer._calculatedTotalHeight);
     this.getFooterContainer().refreshCells();
 }
 
