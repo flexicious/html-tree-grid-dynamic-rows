@@ -1,31 +1,59 @@
 
 $(document).ready(function () {
+    var gridXml = '<grid  id="grid"  enableFooters="true" enableFilters="true"   enableExport="true" preferencePersistenceKey="programaticCellFormatting" forcePagerRow="true">' +
+        '			<level  selectedKeyField="id" >' +
+        '				<columns>' +
+        '					<column type="checkbox" />' +
+        '					<column dataField="id" headerText="ID" filterControl="TextInput" filterOperation="BeginsWith"/>' +
+        '					<column dataField="legalName" filterControl="TextInput" filterOperation="BeginsWith" headerText="Legal Name"/>' +
+        '					<column dataField="line1" filterControl="TextInput" filterOperation="BeginsWith" headerText="Address Line 1"  footerLabelFunction="getFooter"/>' +
+        '					<column dataField="line2" filterControl="TextInput" filterOperation="BeginsWith" headerText="Address Line 2"/>' +
+        '					<column dataField="city" headerText="City" filterControl="MultiSelectComboBox"   filterComboBoxBuildFromGrid="true" filterComboBoxwidth="100"/>' +
+        '					<column dataField="state" headerText="State" filterControl="MultiSelectComboBox" filterComboBoxBuildFromGrid="true" filterComboBoxwidth="100"/>' +
+        '					<column width="100" columnWidthMode="fixed"  dataField="annualRevenue" headerText="Annual Revenue" textAlign="right" headerAlign="center"  labelFunction="flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction"/>' +
+        '					<column width="100"  columnWidthMode="fixed" dataField="numEmployees" headerText="Num Employees" textAlign="right"  footerFormatter="flexiciousNmsp.CurrencyFormatter" labelFunction="flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction"/>' +
+        '					<column width="100" columnWidthMode="fixed" dataField="earningsPerShare" headerText="EPS" textAlign="right"  footerFormatter="flexiciousNmsp.CurrencyFormatter"  labelFunction="flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction"/>' +
+        '					<column width="100" columnWidthMode="fixed" dataField="lastStockPrice" headerText="Stock Price"  textAlign="right"  footerFormatter="flexiciousNmsp.CurrencyFormatter" labelFunction="flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction"/>' +
+        '					<column width="40" dataField="type1" filterControl="ComboBox" filterComboBoxBuildFromGrid="true" columnWidthMode="fixed" itemRenderer="flexiciousNmsp.FontAwesomeRenderer"/>' +
+        '				</columns>' +
+        '			</level>' +
+        '	</grid>';
 
     var gridJson = {
-        id:"grid",
-        enableFooters:true, enableFilters:true, enableExport:true,
-        preferencePersistenceKey:"programaticCellFormatting", forcePagerRow:true
+        id: "grid",
+        enableFooters: true, enableFilters: true, enableExport: true,
+        preferencePersistenceKey: "programaticCellFormatting", forcePagerRow: true
         , level: {
-            selectedKeyField:"id",
+            selectedKeyField: "id",
             columns: [
-                { type:"checkbox" },
-                { dataField:"id", headerText:"ID", filterControl:"TextInput", filterOperation:"BeginsWith" },
-                { dataField:"legalName", filterControl:"TextInput", filterOperation:"BeginsWith", headerText:"Legal Name" },
-                { dataField:"line1", filterControl:"TextInput", filterOperation:"BeginsWith", headerText:"Address Line 1", footerLabelFunction:"getFooter" },
-                { dataField:"line2", filterControl:"TextInput", filterOperation:"BeginsWith", headerText:"Address Line 2" },
-                { dataField:"city", headerText:"City", filterControl:"MultiSelectComboBox", filterComboBoxBuildFromGrid:true, filterComboBoxwidth:"100" },
-                { dataField:"state", headerText:"State", filterControl:"MultiSelectComboBox", filterComboBoxBuildFromGrid:true, filterComboBoxwidth:"100" },
-                { width:"100", columnWidthMode:"fixed", dataField:"annualRevenue", headerText:"Annual Revenue", textAlign:"right", headerAlign:"center",
-                 labelFunction:flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction },
-                { width:"100", columnWidthMode:"fixed", dataField:"numEmployees", headerText:"Num Employees", 
-                textAlign:"right", footerFormatter:flexiciousNmsp.CurrencyFormatter,
-                 labelFunction:flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction },
-                { width:"100", columnWidthMode:"fixed", dataField:"earningsPerShare", headerText:"EPS", textAlign:"right",
-                 footerFormatter:flexiciousNmsp.CurrencyFormatter, labelFunction:flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction },
-                { width:"100", columnWidthMode:"fixed", dataField:"lastStockPrice", headerText:"Stock Price", textAlign:"right", 
-                footerFormatter:flexiciousNmsp.CurrencyFormatter, labelFunction:flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction },
-                { width:"40", dataField:"type1", filterControl:"ComboBox", filterComboBoxBuildFromGrid:true, columnWidthMode:"fixed", 
-                itemRenderer:flexiciousNmsp.FontAwesomeRenderer },
+                { type: "checkbox" },
+                { dataField: "id", headerText: "ID", filterControl: "TextInput", filterOperation: "BeginsWith" },
+                { dataField: "legalName", filterControl: "TextInput", filterOperation: "BeginsWith", headerText: "Legal Name" },
+                { dataField: "line1", filterControl: "TextInput", filterOperation: "BeginsWith", headerText: "Address Line 1", footerLabelFunction: "getFooter" },
+                { dataField: "line2", filterControl: "TextInput", filterOperation: "BeginsWith", headerText: "Address Line 2" },
+                { dataField: "city", headerText: "City", filterControl: "MultiSelectComboBox", filterComboBoxBuildFromGrid: true, filterComboBoxwidth: "100" },
+                { dataField: "state", headerText: "State", filterControl: "MultiSelectComboBox", filterComboBoxBuildFromGrid: true, filterComboBoxwidth: "100" },
+                {
+                    width: "100", columnWidthMode: "fixed", dataField: "annualRevenue", headerText: "Annual Revenue", textAlign: "right", headerAlign: "center",
+                    labelFunction: flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction
+                },
+                {
+                    width: "100", columnWidthMode: "fixed", dataField: "numEmployees", headerText: "Num Employees",
+                    textAlign: "right", footerFormatter: flexiciousNmsp.CurrencyFormatter,
+                    labelFunction: flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction
+                },
+                {
+                    width: "100", columnWidthMode: "fixed", dataField: "earningsPerShare", headerText: "EPS", textAlign: "right",
+                    footerFormatter: flexiciousNmsp.CurrencyFormatter, labelFunction: flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction
+                },
+                {
+                    width: "100", columnWidthMode: "fixed", dataField: "lastStockPrice", headerText: "Stock Price", textAlign: "right",
+                    footerFormatter: flexiciousNmsp.CurrencyFormatter, labelFunction: flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction
+                },
+                {
+                    width: "40", dataField: "type1", filterControl: "ComboBox", filterComboBoxBuildFromGrid: true, columnWidthMode: "fixed",
+                    itemRenderer: flexiciousNmsp.FontAwesomeRenderer
+                },
 
             ]
         }
@@ -34,9 +62,10 @@ $(document).ready(function () {
     grid = new flexiciousNmsp.FlexDataGrid(document.getElementById("gridContainer"),
         {
             dataProvider: generateData(500)
+            ,configuration : gridXml
         });
 
-        grid.buildFromJson(gridJson);
+    //grid.buildFromJson(gridJson);
 })
 var getFooter = function (col) {
     var level = col.level;

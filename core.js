@@ -24,7 +24,9 @@ flexiciousNmsp.FlexDataGrid.prototype.applyAttribute = function (target, attr, n
     {
         var attrName = direct ? attr : attr.name;
         var val = direct ? node : node.attributes.getNamedItem(attrName).value;
-
+        if (val == undefined || val == null) {
+            console.warn("Invalid value specified for attribute" + attr);
+        }
         if (this.delegate && val && val["length"] && val[0] == "{" && val[val.length - 1] == "}") {
             val = val.replace(/{/, "").replace(/}/, "");
             val = val.replace(/\(/, ",").replace(/\)/, "");
@@ -384,12 +386,26 @@ flexiciousNmsp.FlexDataGrid.prototype.getSortCompareFunction = function (sorts) 
     };
     return finalFunc;
 }
+/**
+ * Added for grids that specify their own dimensions at runtime. The default behavior is to always
+ * take 100% of the width of the parent container, but in scenarios where you have custom code sizing 
+ * the grid (like in a dashboard) please call this method to notify the grid of updated dimensions so 
+ * the grid can draw itself.
+ */
+flexiciousNmsp.FlexDataGrid.prototype.setDimenstions(w, h) = function {
+    this.setWidth(width);
+    this.setHeight(height);
 
+    this.invalidateWidth();
+    this.invalidateHeight();
+    this.validateNow();
+    this.snapToColumnWidths();
+}
 /**
  * Refreshing the contents of this cell.
  */
 flexiciousNmsp.FlexDataGridFooterCell.prototype.refreshCell = function () {
-
+    var uiUtil = flexiciousNmsp.UIUtils;
     flexiciousNmsp.FlexDataGridCell.prototype.refreshCell.apply(this, []);
     var col = this.getColumn();
     if (this.getColumn() && (col.footerLabelFunction != null || col.footerLabelFunction2 != null || col.footerOperation != null || col.footerLabel != null)) {
