@@ -1,3 +1,208 @@
+/**
+ * Applies the given attribute to the target. Has built in logic to check to
+ * see if the property is a getter or a setter or a public field, or an event listener,
+ * or a factory, or a renderer. If there is a factory or a renderer, we try to evaluate
+ * the actual function on basis of the string passed in.
+ * @method applyAttribute
+ * @param target The target to apply the property to
+ * @param attr  The attribute on the target
+ * @param node  The value to apply
+ */
+flexiciousNmsp.FlexDataGrid.prototype.applyAttribute = function (target, attr, node, direct) {
+    var uiUtil = flexiciousNmsp.UIUtils;
+    var targetEvents = flexiciousNmsp[target.typeName].ALL_EVENTS;
+    if (!targetEvents) {
+        flexiciousNmsp[target.typeName].ALL_EVENTS = [];
+        for (var prop in flexiciousNmsp[target.typeName]) {
+            if (prop.indexOf("EVENT_") == 0) {
+                flexiciousNmsp[target.typeName].ALL_EVENTS.push(flexiciousNmsp[target.typeName][prop]);
+            }
+        }
+        targetEvents = flexiciousNmsp[target.typeName].ALL_EVENTS;
+    }
+    //try
+    {
+        var attrName = direct ? attr : attr.name;
+        var val = direct ? node : node.attributes.getNamedItem(attrName).value;
+
+        if (this.delegate && val && val["length"] && val[0] == "{" && val[val.length - 1] == "}") {
+            val = val.replace(/{/, "").replace(/}/, "");
+            val = val.replace(/\(/, ",").replace(/\)/, "");
+            val = val.split(",");
+            val = this.executeFunctionByName(val.shift(), this.delegate, val);
+        }
+        //in here, values could be class factories or functions, which
+        //need additional processing before we can apply them.
+        if (attrName.indexOf('Function') > 0 || attrName.indexOf('Renderer') > 0 || attrName.indexOf('Editor') > 0
+            || attrName.indexOf('spinnerFactory') >= 0
+            || attrName.indexOf('filterDateRangeOptions') >= 0 || attrName.indexOf("Formatter") > 0
+            || attrName.indexOf("on") == 0 || targetEvents.indexOf(attrName) >= 0) {
+
+            if (this.delegate != null && this.delegate[val] != undefined) {
+                val = this.delegate[val];
+            }
+            else {
+                val = eval(val);
+            }
+
+            if (attrName.indexOf("on") == 0 || targetEvents.indexOf(attrName) >= 0) {
+                //this is an event
+                target.addEventListener(this, attrName.indexOf("on") == 0 ? attrName.substring(2) : attrName, val);
+            } else if (attrName == ('filterRenderer') ||
+                attrName == ('footerRenderer') ||
+                attrName == ('headerRenderer') ||
+                attrName == ('pagerRenderer') ||
+                attrName == ('itemRenderer') ||
+                attrName == ('nextLevelRenderer') ||
+                attrName == ('iconTooltipRenderer') ||
+                attrName == ('spinnerFactory') ||
+                attrName == ('itemEditor') ||
+                attrName == ('popupFactoryExportOptions') ||
+                attrName == ('popupFactorySaveSettingsPopup') ||
+                attrName == ('popupFactorySettingsPopup')
+            ) {
+                if (!val.implementsOrExtends || !val.implementsOrExtends('ClassFactory')) {
+                    val = new flexiciousNmsp.ClassFactory(val);
+                }
+            }
+        }
+        else if (Array.isArray(val)) {
+        }
+        else if (typeof val !== "string") {
+        }
+        else if (val.toString() == {}.toString()) {
+
+        }
+        else if (val.toLowerCase() == "false") {
+            val = false;
+        }
+        else if (val.toLowerCase() == "true") {
+            val = true;
+        }
+        else if (val.indexOf("[") == 0) {
+            val = val.substring(1, val.length - 1).split(",");
+            for (var i = 0; i < val.length; i++) {
+                if (val[i].indexOf("0x") == 0) {
+                    val[i] = parseInt(val[i], 16);
+                }
+            }
+        }
+        else if (val.indexOf("0x") == 0) {
+            val = parseInt(val, 16)
+        }
+        else if ((val.indexOf("eval__") == 0)) {
+            val = eval(val.split("eval__")[1])
+        }
+        else if (uiUtil.isStringNumeric(val)) {
+            val = parseFloat(val)
+        }
+
+        this.checkSetterAndApply(target, attrName, val);
+    }
+
+};
+
+
+/**
+ * used by the buildFromXml method to parse the XML to build the grid
+ * @method parse
+ */
+flexiciousNmsp.FlexDataGrid.prototype.buildFromJson = function (config) {
+    for (var key in config) {
+        if (key == "level") {
+            this.extractLevelFromJson(config[key], this.getColumnLevel());
+        } else {
+            this.applyAttribute(this, key, config[key], true);
+        }
+    }
+}
+
+/**
+ * Method to extact column information from JSON
+ * @method extractColumns
+ */
+flexiciousNmsp.FlexDataGrid.prototype.extractColumnsFromJson = function (config, lvl) {
+    var cols = [];
+    var hasColumnGroups = false;
+    for (var j = 0; j < config.length; j++) {
+        var colNode = config[j];
+        if (colNode.type == "columnGroup") {
+            hasColumnGroups = true;
+            cols.push(this.extractColGroupFromJson(colNode));
+        }
+        else
+            cols.push(this.extractColFromJson(colNode));
+    }
+    if (hasColumnGroups)
+        lvl.setGroupedColumns(cols);
+    else
+        lvl.setColumns(cols);
+    return { cols: cols, hasColumnGroups: hasColumnGroups, j: j, colNode: colNode };
+};
+/**
+ * Method to extract level information from JSON
+ * @method extractLevelFromJson
+ */
+
+flexiciousNmsp.FlexDataGrid.prototype.extractLevelFromJson = function (config, lvl) {
+    for (var key in config) {
+        if (key == "columns") {
+            this.extractColumnsFromJson(config[key], lvl);
+        }
+        else if (key == "nextLevel") {
+            lvl.nextLevel = new flexiciousNmsp.FlexDataGridColumnLevel(lvl.grid);
+            this.extractLevelFromJson(config[key], lvl.nextLevel);
+        } else {
+            this.applyAttribute(lvl, key, config[key], true);
+        }
+    }
+};
+/**
+ * @method extractColGroup
+ */
+flexiciousNmsp.FlexDataGrid.prototype.extractColGroupFromJson = function (config) {
+
+    var cg = new flexiciousNmsp.FlexDataGridColumnGroup();
+    var cols = [];
+    var hasColumnGroups = false;
+    for (var key in config) {
+        if (key == "columns") {
+            for (var i = 0; i < config[key].length; i++) {
+                var colNode = config[key][i];
+                cols.push(this.extractColFromJson(colNode));
+            }
+        }
+        if (key == "columnGroup") {
+            hasColumnGroups = true;
+            cols.push(this.extractColGroup(colNode));
+        } else {
+            this.applyAttribute(cg, key, config[key], true);
+
+        }
+    }
+    if (hasColumnGroups)
+        cg.columnGroups = (cols);
+    else
+        cg.setColumns(cols);
+    return cg;
+};
+
+/**
+ * @method extractCol
+ */
+flexiciousNmsp.FlexDataGrid.prototype.extractColFromJson = function (config) {
+    var col = new flexiciousNmsp.FlexDataGridColumn();
+    if (config.type == "checkbox")
+        col = new flexiciousNmsp.FlexDataGridCheckBoxColumn();
+
+    for (var key in config) {
+        var colAttr = config[key];
+        if (key != "type")
+            this.applyAttribute(col, key, config[key], true);
+    }
+    return col;
+};
+
 
 flexiciousNmsp.FlexDataGrid.prototype.addRows = function (newRows, runFilter, runSort) {
     var bodyContainer = this.getBodyContainer();
