@@ -26,6 +26,7 @@ flexiciousNmsp.FlexDataGrid.prototype.applyAttribute = function (target, attr, n
         var val = direct ? node : node.attributes.getNamedItem(attrName).value;
         if (val == undefined || val == null) {
             console.warn("Invalid value specified for attribute" + attr);
+            return;
         }
         if (this.delegate && val && val["length"] && val[0] == "{" && val[val.length - 1] == "}") {
             val = val.replace(/{/, "").replace(/}/, "");
