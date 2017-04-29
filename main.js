@@ -64,7 +64,7 @@ $(document).ready(function () {
             dataProvider: generateData(500)
             ,configuration : gridXml
         });
-
+grid.setDimensions(800,600)
     //grid.buildFromJson(gridJson);
 })
 var getFooter = function (col) {

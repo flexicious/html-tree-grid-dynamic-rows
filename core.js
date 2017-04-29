@@ -393,7 +393,7 @@ flexiciousNmsp.FlexDataGrid.prototype.getSortCompareFunction = function (sorts) 
  * the grid (like in a dashboard) please call this method to notify the grid of updated dimensions so 
  * the grid can draw itself.
  */
-flexiciousNmsp.FlexDataGrid.prototype.setDimenstions(w, h) = function {
+flexiciousNmsp.FlexDataGrid.prototype.setDimensions= function(width, height)  {
     this.setWidth(width);
     this.setHeight(height);
 
