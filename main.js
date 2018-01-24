@@ -22,8 +22,8 @@ $(document).ready(function () {
     var gridJson = {
         id: "grid",
         enableFooters: true, enableFilters: true, enableExport: true,
-        preferencePersistenceKey: "programaticCellFormatting", forcePagerRow: true
-        , level: {
+        preferencePersistenceKey: "programaticCellFormatting", forcePagerRow: true,
+        level: {
             selectedKeyField: "id",
             columns: [
                 { type: "checkbox" },
@@ -108,10 +108,31 @@ function startTimer() {
             clearInterval(currentIntervalId);
             return;
         }
-        grid.addRows(generateData(500), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked)
+        grid.processDelta('add', generateData(500), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked)
         console.log(grid._dataProvider.length + " records loaded")
     }, 250)
 }
+
+function deleteItemsRandom() {
+    grid.processDelta('remove', getRandomData(5), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked);
+}
+
+function updateItemsRandom() {
+    grid.processDelta('update', getRandomData(5, true), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked);
+}
+
+function getRandomData(count, update) {
+    if(typeof update === 'undefined') update = false;
+    var list = [], data = grid.getDataProvider();
+    for(var i=0;i<count;i++) {
+        var rIdx = Number(Math.floor((Math.random() * Math.pow(10, String(grid.getDataProvider().length).length - 1) + 1).toFixed(0)));
+        if( update )
+            data[rIdx].legalName += ' (Modified)';
+        list.push(data[rIdx]);
+    }
+    return list;
+}
+
 /*
  * Resets form, loads a new first 500 records  */
 function simDataSwitch() {
