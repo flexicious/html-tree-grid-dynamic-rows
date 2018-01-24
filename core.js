@@ -206,6 +206,11 @@ flexiciousNmsp.FlexDataGrid.prototype.extractColFromJson = function (config) {
     return col;
 };
 
+flexiciousNmsp.FlexDataGrid.prototype.processDelta = function(fn, rows, runFilter, runSort) {
+    if(fn === 'add' || fn === 'remove' || fn === 'update') {
+        flexiciousNmsp.FlexDataGrid.prototype[(fn + 'Rows')].apply(this, [rows, runFilter, runSort]);
+    }
+}
 
 flexiciousNmsp.FlexDataGrid.prototype.addRows = function (newRows, runFilter, runSort) {
     var bodyContainer = this.getBodyContainer();
@@ -259,6 +264,101 @@ flexiciousNmsp.FlexDataGrid.prototype.addRows = function (newRows, runFilter, ru
             var row = bodyContainer.rows[j];
             //now go through all the drawn rows, and update their y property
             row.setY(row.rowPositionInfo.verticalPosition);
+        }
+
+        bodyContainer.recycle(this.getColumnLevel(), false, this.rowHeight, false);//now make sure the body draws the row
+        bodyContainer.placeComponents();//update the cell positions
+        bodyContainer.invalidateCells();
+        bodyContainer.checkScrollChange()
+        bodyContainer.vMatch.setHeight(bodyContainer._calculatedTotalHeight);
+    }
+    this.getFooterContainer().refreshCells();
+}
+
+flexiciousNmsp.FlexDataGrid.prototype.updateRows = function (existingRows, runFilter, runSort) {
+    var bodyContainer = this.getBodyContainer();
+    var rowHeight = this.getRowHeight();
+    var filter = this.getRootFilter();
+    var filterExpressions = filter.filterExpressions;
+    var filterSorts = this.getCurrentSorts();
+    var sortCompareFunction = runSort && filterSorts.length > 0 ? this.getSortCompareFunction(filterSorts) : null;
+    for (var i = 0; i < existingRows.length; i++) {
+        var addToCursor = true;
+        var obj = existingRows[i];
+        var cursorIndex = Math.max(0, bodyContainer.itemVerticalPositions.length);
+        if (runFilter && filterExpressions.length > 0) {
+            for (var k = 0; k < filterExpressions.length; k++) {
+                var fExp = filterExpressions[k];
+                if (!fExp.isMatch(obj, this)) {
+                    addToCursor = false;
+                    break;
+                }
+            }
+        }
+        if (addToCursor) {
+            if (sortCompareFunction && bodyContainer.itemVerticalPositions.length > 0) {
+                cursorIndex = this.getIndexForElement(bodyContainer.itemVerticalPositions, obj, sortCompareFunction).index;
+            } else {
+                if (bodyContainer.itemVerticalPositions.length > 0) {
+                    for(var k=0;k<bodyContainer.itemVerticalPositions.length;k++) {
+                        if(bodyContainer.itemVerticalPositions[k].rowData === obj) {
+                            cursorIndex = k;
+                        }
+                    }
+                }
+            }
+
+            if(cursorIndex > 0) {
+                bodyContainer.itemVerticalPositions[cursorIndex].rowData = obj;
+            }
+            
+        }
+    }
+    if (bodyContainer.rows.length > 0) {
+
+        bodyContainer.recycle(this.getColumnLevel(), false, this.rowHeight, false);//now make sure the body draws the row
+        bodyContainer.placeComponents();//update the cell positions
+        bodyContainer.invalidateCells();
+        bodyContainer.checkScrollChange()
+        bodyContainer.vMatch.setHeight(bodyContainer._calculatedTotalHeight);
+    }
+    this.getFooterContainer().refreshCells();
+}
+
+flexiciousNmsp.FlexDataGrid.prototype.removeRows = function (existingRows, runFilter, runSort) {
+    var bodyContainer = this.getBodyContainer();
+    var rowHeight = this.getRowHeight();
+    for (var i = 0; i < existingRows.length; i++) {
+
+        var obj = existingRows[i];
+        this._dataProvider.splice(this._dataProvider.indexOf(obj), 1);
+
+        if (bodyContainer.itemVerticalPositions.length > 0) {
+            for(var k=0;k<bodyContainer.itemVerticalPositions.length;k++) {
+                if(bodyContainer.itemVerticalPositions[k].rowData === obj) {
+                    var cursorIndex = k;
+                }
+            }
+        }
+        
+        for (var j = cursorIndex; j < bodyContainer.itemVerticalPositions.length; j++) {
+            var existingRowPos = bodyContainer.itemVerticalPositions[j];
+            existingRowPos.rowIndex -= 1;
+            existingRowPos.verticalPosition -= rowHeight;//push everything down.
+        }
+        bodyContainer._calculatedTotalHeight -= rowHeight;
+        bodyContainer.itemVerticalPositions.splice(cursorIndex, 1);//add item at index 0.
+        bodyContainer.rows.splice(cursorIndex, 1);
+    }
+    if (bodyContainer.rows.length == 0) {
+        //we havent drawn anything yet.
+        bodyContainer.drawRows(true)
+        this.checkNoDataMessage();
+    } else {
+        for (var j = 0; j < bodyContainer.rows.length; j++) {
+            var row = bodyContainer.rows[j];
+            //now go through all the drawn rows, and update their y property
+            row.y = row.rowPositionInfo.verticalPosition;
         }
 
         bodyContainer.recycle(this.getColumnLevel(), false, this.rowHeight, false);//now make sure the body draws the row
