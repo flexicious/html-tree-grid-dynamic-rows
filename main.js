@@ -99,6 +99,7 @@ function getRandom(minNum, maxNum) {
     return Math.ceil(Math.random() * (maxNum - minNum + 1)) + (minNum - 1);
 };
 function startTimer() {
+    document.getElementById("cbUpdateDataProvider").disabled = true;
     document.getElementById("cbFilterRows").disabled = true;
     document.getElementById("cbSortRows").disabled = true;
     document.getElementById("btnFetch").disabled = true;
@@ -108,13 +109,13 @@ function startTimer() {
             clearInterval(currentIntervalId);
             return;
         }
-        grid.processDelta('add', generateData(500), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked)
+        grid.processDelta('add', generateData(500), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked, document.getElementById("cbUpdateDataProvider").checked)
         console.log(grid._dataProvider.length + " records loaded")
     }, 250)
 }
 
 function deleteItemsRandom() {
-    grid.processDelta('remove', getRandomData(5), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked);
+    grid.processDelta('remove', getRandomData(5), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked, document.getElementById("cbUpdateDataProvider").checked);
 }
 
 function updateItemsRandom() {
@@ -136,6 +137,7 @@ function getRandomData(count, update) {
 /*
  * Resets form, loads a new first 500 records  */
 function simDataSwitch() {
+    document.getElementById("cbUpdateDataProvider").disabled = false;
     document.getElementById("cbFilterRows").disabled = false;
     document.getElementById("cbSortRows").disabled = false;
     document.getElementById("btnFetch").disabled = false;
