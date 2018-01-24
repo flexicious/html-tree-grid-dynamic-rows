@@ -206,13 +206,14 @@ flexiciousNmsp.FlexDataGrid.prototype.extractColFromJson = function (config) {
     return col;
 };
 
-flexiciousNmsp.FlexDataGrid.prototype.processDelta = function(fn, rows, runFilter, runSort) {
+flexiciousNmsp.FlexDataGrid.prototype.processDelta = function(fn, rows, runFilter, runSort, updateDataProvider) {
+    if(typeof updateDataProvider === 'undefined') updateDataProvider = false;
     if(fn === 'add' || fn === 'remove' || fn === 'update') {
-        flexiciousNmsp.FlexDataGrid.prototype[(fn + 'Rows')].apply(this, [rows, runFilter, runSort]);
+        flexiciousNmsp.FlexDataGrid.prototype[(fn + 'Rows')].apply(this, [rows, runFilter, runSort, updateDataProvider]);
     }
 }
 
-flexiciousNmsp.FlexDataGrid.prototype.addRows = function (newRows, runFilter, runSort) {
+flexiciousNmsp.FlexDataGrid.prototype.addRows = function (newRows, runFilter, runSort, updateDataProvider) {
     var bodyContainer = this.getBodyContainer();
     var rowHeight = this.getRowHeight();
     var filter = this.getRootFilter();
@@ -223,7 +224,8 @@ flexiciousNmsp.FlexDataGrid.prototype.addRows = function (newRows, runFilter, ru
         var addToCursor = true;
         var obj = newRows[i];
         var cursorIndex = Math.max(0, bodyContainer.itemVerticalPositions.length);
-        this._dataProvider.push(obj);
+        if(updateDataProvider)
+            this._dataProvider.push(obj);
         if (runFilter && filterExpressions.length > 0) {
             for (var k = 0; k < filterExpressions.length; k++) {
                 var fExp = filterExpressions[k];
@@ -325,13 +327,14 @@ flexiciousNmsp.FlexDataGrid.prototype.updateRows = function (existingRows, runFi
     this.getFooterContainer().refreshCells();
 }
 
-flexiciousNmsp.FlexDataGrid.prototype.removeRows = function (existingRows, runFilter, runSort) {
+flexiciousNmsp.FlexDataGrid.prototype.removeRows = function (existingRows, runFilter, runSort, updateDataProvider) {
     var bodyContainer = this.getBodyContainer();
     var rowHeight = this.getRowHeight();
     for (var i = 0; i < existingRows.length; i++) {
 
         var obj = existingRows[i];
-        this._dataProvider.splice(this._dataProvider.indexOf(obj), 1);
+        if(updateDataProvider)
+            this._dataProvider.splice(this._dataProvider.indexOf(obj), 1);
 
         if (bodyContainer.itemVerticalPositions.length > 0) {
             for(var k=0;k<bodyContainer.itemVerticalPositions.length;k++) {
