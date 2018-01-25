@@ -16,6 +16,9 @@ $(document).ready(function () {
         '					<column width="100" columnWidthMode="fixed" dataField="lastStockPrice" headerText="Stock Price"  textAlign="right"  footerFormatter="flexiciousNmsp.CurrencyFormatter" labelFunction="flexiciousNmsp.UIUtils.dataGridFormatCurrencyLabelFunction"/>' +
         '					<column width="40" dataField="type1" filterControl="ComboBox" filterComboBoxBuildFromGrid="true" columnWidthMode="fixed" itemRenderer="flexiciousNmsp.FontAwesomeRenderer"/>' +
         '				</columns>' +
+        '               <nextLevel>' +
+        '                   <level reusePreviousLevelColumns="true" />' +
+        '               </nextLevel>' +
         '			</level>' +
         '	</grid>';
 
@@ -25,6 +28,7 @@ $(document).ready(function () {
         preferencePersistenceKey: "programaticCellFormatting", forcePagerRow: true,
         level: {
             selectedKeyField: "id",
+            childrenField: "children",
             columns: [
                 { type: "checkbox" },
                 { dataField: "id", headerText: "ID", filterControl: "TextInput", filterOperation: "BeginsWith" },
@@ -54,8 +58,10 @@ $(document).ready(function () {
                     width: "40", dataField: "type1", filterControl: "ComboBox", filterComboBoxBuildFromGrid: true, columnWidthMode: "fixed",
                     itemRenderer: flexiciousNmsp.FontAwesomeRenderer
                 },
-
-            ]
+            ],
+            nextLevel: {
+                reusePreviousLevelColumns: true  
+            }
         }
     }
 
@@ -66,6 +72,7 @@ $(document).ready(function () {
         });
 grid.setDimensions(800,600)
     //grid.buildFromJson(gridJson);
+    grid.expandAll();
 })
 var getFooter = function (col) {
     var level = col.level;
@@ -116,6 +123,17 @@ function startTimer() {
 
 function deleteItemsRandom() {
     grid.processDelta('remove', getRandomData(5), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked, document.getElementById("cbUpdateDataProvider").checked);
+}
+
+function modifiedChildrenRandom() {
+    var dataList = grid.getDataProvider();
+    var data = [];
+    for(var k=0;k<20;k++) {
+        var rIdx = getRandom(1, dataList.length - 1);
+        generateChildrenData(dataList[rIdx], getRandom(3, 10));
+        data.push(dataList[rIdx]);
+    }
+    grid.processDelta('childrenModified', data, document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked, document.getElementById("cbUpdateDataProvider").checked);
 }
 
 function updateItemsRandom() {
@@ -172,12 +190,42 @@ function generateData(count) {
         obj.lastStockPrice = getRandom(10, 30) + (getRandom(1, 99) / 100);
         obj.type1 = parseInt(Math.random() * 10).toString()
 
+        generateChildrenData(obj, 2)
+        
         result.push(obj);
     }
     return result;
 }
 
+function generateChildrenData(parentObj, count) {
+    parentObj.children = [];
+    for (var k = 0; k < count; k++) {
+        var child = {};
+        child.id = parentObj.id * 100 + k;
+        child.legalName = "Name " + child.id;
+        child.line1 = getRandom(100, 999).toString() + " " + streetNames[getRandom(0, streetNames.length - 1)] + " " + streetTypes[getRandom(0, streetTypes.length - 1)];
+        child.line2 = "Suite #" + getRandom(1, 1000);
 
+        // 1 in 750 chance of getting a special record in the line2 field, easy to filter on.
+        if (getRandom(0, 750) == 0) {
+            child.line2 = 'TEST'
+        }
+
+        if (k % 5 == 0) {
+            child.line2 = null;
+        }
+        child.city = cities[getRandom(0, cities.length - 1)];
+        child.state = states[getRandom(0, states.length - 1)];
+
+        child.annualRevenue = getRandom(1000, 60000)
+        child.numEmployees = getRandom(1000, 60000)
+        child.earningsPerShare = getRandom(1, 6) + (getRandom(1, 99) / 100);
+        child.lastStockPrice = getRandom(10, 30) + (getRandom(1, 99) / 100);
+        child.type1 = parentObj.type1;
+
+        parentObj.children.push(child);
+    }
+}
 
 
 
