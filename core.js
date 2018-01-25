@@ -208,9 +208,105 @@ flexiciousNmsp.FlexDataGrid.prototype.extractColFromJson = function (config) {
 
 flexiciousNmsp.FlexDataGrid.prototype.processDelta = function(fn, rows, runFilter, runSort, updateDataProvider) {
     if(typeof updateDataProvider === 'undefined') updateDataProvider = false;
-    if(fn === 'add' || fn === 'remove' || fn === 'update') {
+    if(fn === 'add' || fn === 'remove' || fn === 'update' || fn === 'childrenModified') {
         flexiciousNmsp.FlexDataGrid.prototype[(fn + 'Rows')].apply(this, [rows, runFilter, runSort, updateDataProvider]);
     }
+}
+
+flexiciousNmsp.FlexDataGrid.prototype.childrenModifiedRows = function (existingRows, runFilter, runSort, updateDataProvider) {
+    var bodyContainer = this.getBodyContainer();
+    var rowHeight = this.getRowHeight();
+    var filter = this.getRootFilter();
+    var filterExpressions = filter.filterExpressions;
+    var filterSorts = this.getCurrentSorts();
+    var sortCompareFunction = runSort && filterSorts.length > 0 ? this.getSortCompareFunction(filterSorts) : null;
+    for (var i = 0; i < existingRows.length; i++) {
+
+        var obj = existingRows[i];
+        var cursorIndex = Math.max(0, bodyContainer.itemVerticalPositions.length);
+        if (updateDataProvider)
+            this._dataProvider.push(obj);
+
+        if (sortCompareFunction && bodyContainer.itemVerticalPositions.length > 0) {
+            cursorIndex = this.getIndexForElement(bodyContainer.itemVerticalPositions, obj, sortCompareFunction).index;
+        } else {
+            if (bodyContainer.itemVerticalPositions.length > 0) {
+                for (var k = 0; k < bodyContainer.itemVerticalPositions.length; k++) {
+                    if (bodyContainer.itemVerticalPositions[k].rowData === obj) {
+                        cursorIndex = k;
+                    }
+                }
+            }
+        }
+        var parentRowPosition = bodyContainer.itemVerticalPositions[cursorIndex] || null;
+        if (!this.getColumnLevel().isItemOpen(parentRowPosition.rowData)) continue;
+        var cursorPointer = cursorIndex + 1;
+        var nextRow, rowsToRemove = [], index = cursorPointer;
+
+        while ((nextRow = bodyContainer.itemVerticalPositions[cursorPointer] || null) && nextRow.levelNestDepth > 1) {
+            for (var j = cursorIndex + 1; j < bodyContainer.itemVerticalPositions.length; j++) {
+                var existingRowPos = bodyContainer.itemVerticalPositions[j];
+                existingRowPos.rowIndex -= 1;
+                existingRowPos.verticalPosition -= rowHeight;//push everything down.
+            }
+         
+            bodyContainer._calculatedTotalHeight -= rowHeight;
+            rowsToRemove.push(bodyContainer.rows[index++]);
+            bodyContainer.itemVerticalPositions.splice(cursorPointer--, 1);
+
+            cursorPointer++;
+        }
+
+        var children = this.getChildren(obj, this.getColumnLevel());
+
+        for (var k = 0; k < children.length; k++) {
+
+            var rowPos = new flexiciousNmsp.RowPositionInfo(
+                children[k],//the data object
+                parentRowPosition ? parentRowPosition.rowIndex + 1 : 0, //row index of the data object (0 because we are adding it at the top, you can add it anywhere
+                parentRowPosition ? parentRowPosition.verticalPosition + rowHeight : 0,//vertical position of the data object (rowIndex * rowHeight) assuming no variable row height. Or you could lookup the verticalPos of the item above me, and add his height to that number to get this number
+                rowHeight,//same height rows. For variable row height, you can calculate this
+                this.getColumnLevel().nextLevel, //the top level. If you are adding a child object, you can use the appropriate inner level
+                flexiciousNmsp.RowPositionInfo.ROW_TYPE_DATA //type of row. For inner level rows, you can add Header, footer, filter, pager ,renderer rows
+            );
+            for (var j = cursorIndex + 1; j < bodyContainer.itemVerticalPositions.length; j++) {
+                var existingRowPos = bodyContainer.itemVerticalPositions[j];
+                    existingRowPos.rowIndex += 1;
+                existingRowPos.verticalPosition += rowHeight;//push everything down.
+            }
+            bodyContainer._calculatedTotalHeight += rowHeight;
+            bodyContainer.itemVerticalPositions.splice(cursorIndex + 1, 0, rowPos);//add item at index 0.
+        }
+
+        for(j=0;j<rowsToRemove.length;j++){
+            var row=rowsToRemove[j];
+            if(row) {
+                bodyContainer.rows.splice(bodyContainer.rows.indexOf(row),1);
+                bodyContainer.saveRowInCache(row);
+            }
+        }
+        
+        if (bodyContainer.rows.length == 0) {
+            //we havent drawn anything yet.
+            bodyContainer.drawRows(true)
+            this.checkNoDataMessage();
+        } else {
+            
+            for (var j = 0; j < bodyContainer.rows.length; j++) {
+                var row = bodyContainer.rows[j];
+                //now go through all the drawn rows, and update their y property
+                row.y = row.rowPositionInfo.verticalPosition;
+            }
+
+            bodyContainer.recycle(this.getColumnLevel(), false, this.rowHeight, false);//now make sure the body draws the row
+            bodyContainer.placeComponents();//update the cell positions
+            bodyContainer.invalidateCells();
+            bodyContainer.checkScrollChange()
+            bodyContainer.vMatch.setHeight(bodyContainer._calculatedTotalHeight);
+        }
+        this.getFooterContainer().refreshCells();
+    }
+    this.refreshCells();
 }
 
 flexiciousNmsp.FlexDataGrid.prototype.addRows = function (newRows, runFilter, runSort, updateDataProvider) {
