@@ -425,29 +425,36 @@ flexiciousNmsp.FlexDataGrid.prototype.updateRows = function (existingRows, runFi
 
 flexiciousNmsp.FlexDataGrid.prototype.removeRows = function (existingRows, runFilter, runSort, updateDataProvider) {
     var bodyContainer = this.getBodyContainer();
-    var rowHeight = this.getRowHeight();
     for (var i = 0; i < existingRows.length; i++) {
 
         var obj = existingRows[i];
+        var cursorIndex = -1;
         if(updateDataProvider)
             this._dataProvider.splice(this._dataProvider.indexOf(obj), 1);
 
         if (bodyContainer.itemVerticalPositions.length > 0) {
             for(var k=0;k<bodyContainer.itemVerticalPositions.length;k++) {
                 if(bodyContainer.itemVerticalPositions[k].rowData === obj) {
-                    var cursorIndex = k;
+                    cursorIndex = k;
+                    break;//we found the row!
                 }
             }
         }
+        if(cursorIndex == -1){
+            continue; //this means the row we were asked to delete does not exist
+            //in the currently filtered data. So we cannot remove it. 
+        }
+        //in case of variable row height, we need to use the current rows previously calculated height.
+        var rowHeight = bodyContainer.itemVerticalPositions[cursorIndex].rowHeight;
         
         for (var j = cursorIndex; j < bodyContainer.itemVerticalPositions.length; j++) {
             var existingRowPos = bodyContainer.itemVerticalPositions[j];
             existingRowPos.rowIndex -= 1;
-            existingRowPos.verticalPosition -= rowHeight;//push everything down.
+            existingRowPos.verticalPosition -= rowHeight;//pull everything up.
         }
         bodyContainer._calculatedTotalHeight -= rowHeight;
-        bodyContainer.itemVerticalPositions.splice(cursorIndex, 1);//add item at index 0.
-        bodyContainer.rows.splice(cursorIndex, 1);
+        bodyContainer.itemVerticalPositions.splice(cursorIndex, 1);//remove the row that we are supposed to delete.
+        bodyContainer.rows.splice(cursorIndex, 1); //remove the actual row 
     }
     if (bodyContainer.rows.length == 0) {
         //we havent drawn anything yet.
