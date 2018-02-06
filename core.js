@@ -239,7 +239,7 @@ flexiciousNmsp.FlexDataGrid.prototype.childrenModifiedRows = function (existingR
             }
         }
         var parentRowPosition = bodyContainer.itemVerticalPositions[cursorIndex] || null;
-        if (!this.getColumnLevel().isItemOpen(parentRowPosition.rowData)) continue;
+        if (!parentRowPosition || !this.getColumnLevel().isItemOpen(parentRowPosition.rowData)) continue;
         var cursorPointer = cursorIndex + 1;
         var nextRow, rowsToRemove = [], index = cursorPointer;
 
@@ -351,6 +351,32 @@ flexiciousNmsp.FlexDataGrid.prototype.addRows = function (newRows, runFilter, ru
             }
             bodyContainer._calculatedTotalHeight += rowHeight;
             bodyContainer.itemVerticalPositions.splice(cursorIndex, 0, rowPos);//add item at index 0.
+
+            if(this.isExpandAll) {
+
+                var parentRowPosition = rowPos;
+                
+                var children = this.getChildren(obj, this.getColumnLevel());
+
+                for (var k = 0; k < children.length; k++) {
+
+                    var rowPos = new flexiciousNmsp.RowPositionInfo(
+                        children[k],//the data object
+                        parentRowPosition ? parentRowPosition.rowIndex + 1 : 0, //row index of the data object (0 because we are adding it at the top, you can add it anywhere
+                        parentRowPosition ? parentRowPosition.verticalPosition + rowHeight : 0,//vertical position of the data object (rowIndex * rowHeight) assuming no variable row height. Or you could lookup the verticalPos of the item above me, and add his height to that number to get this number
+                        rowHeight,//same height rows. For variable row height, you can calculate this
+                        this.getColumnLevel().nextLevel, //the top level. If you are adding a child object, you can use the appropriate inner level
+                        flexiciousNmsp.RowPositionInfo.ROW_TYPE_DATA //type of row. For inner level rows, you can add Header, footer, filter, pager ,renderer rows
+                    );
+                    for (var j = cursorIndex + 1; j < bodyContainer.itemVerticalPositions.length; j++) {
+                        var existingRowPos = bodyContainer.itemVerticalPositions[j];
+                            existingRowPos.rowIndex += 1;
+                        existingRowPos.verticalPosition += rowHeight;//push everything down.
+                    }
+                    bodyContainer._calculatedTotalHeight += rowHeight;
+                    bodyContainer.itemVerticalPositions.splice(cursorIndex + 1, 0, rowPos);//add item at index 0.
+                }
+            }
         }
     }
     if (bodyContainer.rows.length == 0) {
@@ -446,15 +472,21 @@ flexiciousNmsp.FlexDataGrid.prototype.removeRows = function (existingRows, runFi
         }
         //in case of variable row height, we need to use the current rows previously calculated height.
         var rowHeight = bodyContainer.itemVerticalPositions[cursorIndex].rowHeight;
-        
-        for (var j = cursorIndex; j < bodyContainer.itemVerticalPositions.length; j++) {
-            var existingRowPos = bodyContainer.itemVerticalPositions[j];
-            existingRowPos.rowIndex -= 1;
-            existingRowPos.verticalPosition -= rowHeight;//pull everything up.
+
+        var currentRowPositionInfo = bodyContainer.itemVerticalPositions[cursorIndex];
+
+        if(currentRowPositionInfo && !this.getColumnLevel().isItemOpen(currentRowPositionInfo.rowData)) {
+            bodyContainer.handleCollapse(currentRowPositionInfo.rowData, currentRowPositionInfo);
+        } else {
+            for (var j = cursorIndex; j < bodyContainer.itemVerticalPositions.length; j++) {
+                var existingRowPos = bodyContainer.itemVerticalPositions[j];
+                existingRowPos.rowIndex -= 1;
+                existingRowPos.verticalPosition -= rowHeight;//pull everything up.
+            }
+            bodyContainer._calculatedTotalHeight -= rowHeight;
+            bodyContainer.itemVerticalPositions.splice(cursorIndex, 1);//remove the row that we are supposed to delete.
+            bodyContainer.rows.splice(cursorIndex, 1); //remove the actual row 
         }
-        bodyContainer._calculatedTotalHeight -= rowHeight;
-        bodyContainer.itemVerticalPositions.splice(cursorIndex, 1);//remove the row that we are supposed to delete.
-        bodyContainer.rows.splice(cursorIndex, 1); //remove the actual row 
     }
     if (bodyContainer.rows.length == 0) {
         //we havent drawn anything yet.
