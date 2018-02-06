@@ -122,7 +122,7 @@ function startTimer() {
 }
 
 function deleteItemsRandom() {
-    grid.processDelta('remove', getRandomData(5), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked, document.getElementById("cbUpdateDataProvider").checked);
+    grid.processDelta('remove', getRandomData(5, false, true), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked, document.getElementById("cbUpdateDataProvider").checked);
 }
 
 function modifiedChildrenRandom() {
@@ -140,11 +140,12 @@ function updateItemsRandom() {
     grid.processDelta('update', getRandomData(5, true), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked);
 }
 
-function getRandomData(count, update) {
+function getRandomData(count, update, inSequence) {
     if(typeof update === 'undefined') update = false;
+    if(typeof inSequence === 'undefined') inSequence = false;
     var list = [], data = grid.getDataProvider();
     for(var i=0;i<count;i++) {
-        var rIdx = Number(Math.floor((Math.random() * Math.pow(10, String(grid.getDataProvider().length).length - 1) + 1).toFixed(0)));
+        var rIdx = inSequence ? i : Number(Math.floor((Math.random() * Math.pow(10, String(grid.getDataProvider().length).length - 1) + 1).toFixed(0)));
         if( update )
             data[rIdx].legalName += ' (Modified)';
         list.push(data[rIdx]);
