@@ -474,19 +474,18 @@ flexiciousNmsp.FlexDataGrid.prototype.removeRows = function (existingRows, runFi
         var rowHeight = bodyContainer.itemVerticalPositions[cursorIndex].rowHeight;
 
         var currentRowPositionInfo = bodyContainer.itemVerticalPositions[cursorIndex];
-
-        if(currentRowPositionInfo && !this.getColumnLevel().isItemOpen(currentRowPositionInfo.rowData)) {
+        if(currentRowPositionInfo && this.getColumnLevel().isItemOpen(currentRowPositionInfo.rowData)) {
             bodyContainer.handleCollapse(currentRowPositionInfo.rowData, currentRowPositionInfo);
-        } else {
-            for (var j = cursorIndex; j < bodyContainer.itemVerticalPositions.length; j++) {
-                var existingRowPos = bodyContainer.itemVerticalPositions[j];
-                existingRowPos.rowIndex -= 1;
-                existingRowPos.verticalPosition -= rowHeight;//pull everything up.
-            }
-            bodyContainer._calculatedTotalHeight -= rowHeight;
-            bodyContainer.itemVerticalPositions.splice(cursorIndex, 1);//remove the row that we are supposed to delete.
-            bodyContainer.rows.splice(cursorIndex, 1); //remove the actual row 
         }
+        
+        for (var j = cursorIndex; j < bodyContainer.itemVerticalPositions.length; j++) {
+            var existingRowPos = bodyContainer.itemVerticalPositions[j];
+            existingRowPos.rowIndex -= 1;
+            existingRowPos.verticalPosition -= rowHeight;//pull everything up.
+        }
+        bodyContainer._calculatedTotalHeight -= rowHeight;
+        bodyContainer.itemVerticalPositions.splice(cursorIndex, 1);//remove the row that we are supposed to delete.
+        bodyContainer.rows.splice(cursorIndex, 1); //remove the actual row 
     }
     if (bodyContainer.rows.length == 0) {
         //we havent drawn anything yet.
