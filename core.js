@@ -474,6 +474,7 @@ flexiciousNmsp.FlexDataGrid.prototype.removeRows = function (existingRows, runFi
         var rowHeight = bodyContainer.itemVerticalPositions[cursorIndex].rowHeight;
 
         var currentRowPositionInfo = bodyContainer.itemVerticalPositions[cursorIndex];
+        var parentRowInfo = bodyContainer.rows[cursorIndex];
         if(currentRowPositionInfo && this.getColumnLevel().isItemOpen(currentRowPositionInfo.rowData)) {
             bodyContainer.handleCollapse(currentRowPositionInfo.rowData, currentRowPositionInfo);
         }
@@ -486,6 +487,7 @@ flexiciousNmsp.FlexDataGrid.prototype.removeRows = function (existingRows, runFi
         bodyContainer._calculatedTotalHeight -= rowHeight;
         bodyContainer.itemVerticalPositions.splice(cursorIndex, 1);//remove the row that we are supposed to delete.
         bodyContainer.rows.splice(cursorIndex, 1); //remove the actual row 
+        if(parentRowInfo) bodyContainer.saveRowInCache(parentRowInfo);
     }
     if (bodyContainer.rows.length == 0) {
         //we havent drawn anything yet.
