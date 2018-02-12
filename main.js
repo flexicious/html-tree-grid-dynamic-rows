@@ -116,13 +116,22 @@ function startTimer() {
             clearInterval(currentIntervalId);
             return;
         }
-        grid.processDelta('add', generateData(500), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked, document.getElementById("cbUpdateDataProvider").checked)
+
+        var action = 'add';
+        var items = generateData(500);
+
+        grid.processDelta(action, items, document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked, document.getElementById("cbUpdateDataProvider").checked)
         console.log(grid._dataProvider.length + " records loaded")
+        updateLogger(action, items);
     }, 250)
 }
 
 function deleteItemsRandom() {
-    grid.processDelta('remove', getRandomData(5, false, true), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked, document.getElementById("cbUpdateDataProvider").checked);
+    
+    var action = 'remove';
+    var items = getRandomData(5, false, true);
+    grid.processDelta(action, items, document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked, document.getElementById("cbUpdateDataProvider").checked);
+    updateLogger(action, items);
 }
 
 function modifiedChildrenRandom() {
@@ -133,11 +142,19 @@ function modifiedChildrenRandom() {
         generateChildrenData(dataList[rIdx], getRandom(3, 10));
         data.push(dataList[rIdx]);
     }
-    grid.processDelta('childrenModified', data, document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked, document.getElementById("cbUpdateDataProvider").checked);
+    
+    var action = 'childrenModified';
+    grid.processDelta(action, data, document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked, document.getElementById("cbUpdateDataProvider").checked);
+    updateLogger(action, data);
 }
 
 function updateItemsRandom() {
-    grid.processDelta('update', getRandomData(5, true), document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked);
+    
+    var action = 'update';
+    var items = getRandomData(5, true);
+    grid.processDelta(action, items, document.getElementById("cbFilterRows").checked, document.getElementById("cbSortRows").checked);
+
+    updateLogger(action, items);
 }
 
 function getRandomData(count, update, inSequence) {
@@ -151,6 +168,38 @@ function getRandomData(count, update, inSequence) {
         list.push(data[rIdx]);
     }
     return list;
+}
+
+function updateLogger(action, items) {
+    var logger = document.querySelector('#loggerArea');
+
+    var log = logger.innerHTML || '';
+
+    log += '<h3>::===================  ' + action + " rows" + '  ===================::</h3>';
+    [].forEach.call(items, function(item) {
+        log += '<p>';
+        [].forEach.call(Object.keys(item), function(key) {
+            if(key !== 'children')
+                log += '<span class="field">' + key + ': </span>' + item[key] + ' ';
+            else {
+                log += '<br><span class="field"> >>>>>>>>> children <<<<<<<<<< </span>';
+                [].forEach.call(item[key], function(child) {
+                    log += '<p>';
+                    [].forEach.call(Object.keys(child), function(childkey) {
+                        log += '<span class="field">' + childkey + ': </span>' + child[childkey] + ' ';
+                    });
+                    log += '</p>';
+                });
+                log += '<span class="field"> <<<<<<<<<< end of children >>>>>>>>> </span>';
+            }
+        });
+        log += '</p><br>';
+    });
+
+    log += '<br>';
+
+    logger.innerHTML = log;
+    logger.scrollTop = logger.scrollHeight;
 }
 
 /*
